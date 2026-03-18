@@ -522,7 +522,7 @@
 
     <section class="contact-section">
         <h2>Get in Touch</h2>
-        <p class="contact-subtext">Questions about the project? Reach out directly to pick your preferred email app.</p>
+        <p class="contact-subtext">Click below to email us directly.</p>
         <button id="open-email-modal" class="contact-btn" aria-haspopup="dialog">
             <i class="fa-solid fa-envelope"></i>
             mark@markdwatt.com
@@ -623,14 +623,14 @@ document.getElementById('copy-email').addEventListener('click', function() {
     });
 });
 
-/* VISITOR COUNTER */
+/* VISITOR COUNTER — hits.sh */
 (async function() {
     var el = document.getElementById('visitor-count');
     try {
-        var res  = await fetch('https://api.countapi.xyz/hit/markdwatt/estate-executor-tracker');
+        var res  = await fetch('https://hits.sh/mdwatt.github.io/estate-executor-status-tracker.json');
         var data = await res.json();
-        if (data && typeof data.value === 'number') {
-            var target = data.value, current = 0;
+        if (data && typeof data.total === 'number') {
+            var target = data.total, current = 0;
             var step = Math.max(1, Math.floor(target / 60));
             var timer = setInterval(function() {
                 current = Math.min(current + step, target);
