@@ -623,14 +623,16 @@ document.getElementById('copy-email').addEventListener('click', function() {
     });
 });
 
-/* VISITOR COUNTER — hits.sh */
+/* VISITOR COUNTER — GoatCounter */
 (async function() {
     var el = document.getElementById('visitor-count');
     try {
-        var res  = await fetch('https://hits.sh/mdwatt.github.io/estate-executor-status-tracker.json');
+        var res  = await fetch('https://estateexecutortracker.goatcounter.com/counter//index.html.json');
         var data = await res.json();
-        if (data && typeof data.total === 'number') {
-            var target = data.total, current = 0;
+        if (data && typeof data.count === 'string') {
+            var target = parseInt(data.count.replace(/,/g, ''), 10);
+            if (isNaN(target)) { el.textContent = '\u2014'; return; }
+            var current = 0;
             var step = Math.max(1, Math.floor(target / 60));
             var timer = setInterval(function() {
                 current = Math.min(current + step, target);
@@ -650,5 +652,6 @@ backTop.addEventListener('click', function() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 </script>
+<script data-goatcounter="https://estateexecutortracker.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
