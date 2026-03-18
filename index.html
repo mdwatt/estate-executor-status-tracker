@@ -623,24 +623,43 @@ document.getElementById('copy-email').addEventListener('click', function() {
     });
 });
 
-/* VISITOR COUNTER — GoatCounter */
-(async function() {
+/* VISITOR COUNTER — GoatCounter
+   Waits for count.js to finish loading, then fetches
+   the exact path GoatCounter recorded for this page.   */
+(function() {
     var el = document.getElementById('visitor-count');
-    try {
-        var res  = await fetch('https://estateexecutortracker.goatcounter.com/counter/' + encodeURIComponent(location.pathname) + '.json');
-        var data = await res.json();
-        if (data && typeof data.count_unique === 'number') {
-            var target = data.count_unique;
-            if (target === 0) { el.textContent = '1'; return; }
-            var current = 0;
-            var step  = Math.max(1, Math.floor(target / 60));
-            var timer = setInterval(function() {
-                current = Math.min(current + step, target);
-                el.textContent = current.toLocaleString();
-                if (current >= target) clearInterval(timer);
-            }, Math.max(16, Math.round(1200 / (target / step))));
-        } else { el.textContent = '\u2014'; }
-    } catch(e) { el.textContent = '\u2014'; }
+    var GC_URL = 'https://estateexecutortracker.goatcounter.com';
+
+    function fetchCount(path) {
+        fetch(GC_URL + '/counter/' + encodeURIComponent(path) + '.json')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var total = data.count_unique || data.count || 0;
+                if (!total) { el.textContent = '1'; return; }
+                var current = 0;
+                var step  = Math.max(1, Math.floor(total / 60));
+                var timer = setInterval(function() {
+                    current = Math.min(current + step, total);
+                    el.textContent = current.toLocaleString();
+                    if (current >= total) clearInterval(timer);
+                }, Math.max(16, Math.round(1200 / (total / step))));
+            })
+            .catch(function() { el.textContent = '\u2014'; });
+    }
+
+    /* Poll until count.js exposes get_data(), then use its path.
+       Falls back to location.pathname after 5 seconds.          */
+    var waited = 0;
+    var poll = setInterval(function() {
+        waited += 100;
+        if (window.goatcounter && window.goatcounter.get_data) {
+            clearInterval(poll);
+            fetchCount(window.goatcounter.get_data()['p']);
+        } else if (waited >= 5000) {
+            clearInterval(poll);
+            fetchCount(location.pathname);
+        }
+    }, 100);
 })();
 
 /* SCROLL TO TOP */
