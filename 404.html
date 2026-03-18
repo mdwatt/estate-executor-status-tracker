@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found — Estate Executor Status Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #F7F5F0; --surface: #FFFFFF; --border: #D9D2C5;
+            --text-primary: #1A1714; --text-muted: #7A7167;
+            --accent: #1B4332; --accent-light: #D8F3DC; --accent-mid: #52796F;
+            --blue: #2D6A8A; --blue-light: #DBF0FA;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg); color: var(--text-primary);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem; text-align: center;
+        }
+        .container { max-width: 480px; }
+        .code {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(5rem, 20vw, 8rem); font-weight: 700;
+            color: var(--accent); line-height: 1; margin-bottom: 1rem;
+            opacity: 0.15;
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.4rem, 4vw, 1.9rem); font-weight: 700;
+            margin-bottom: 0.75rem; color: var(--text-primary);
+        }
+        p { font-size: 1rem; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            background: var(--accent); color: #fff; border-radius: 100px;
+            padding: 0.85rem 2rem; font-size: 0.95rem; font-weight: 600;
+            text-decoration: none; transition: opacity 0.2s, transform 0.2s;
+        }
+        .btn:hover { opacity: 0.88; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="code">404</div>
+        <h1>Page Not Found</h1>
+        <p>The page you were looking for doesn't exist or may have been moved. Let's get you back on track.</p>
+        <a href="https://github.com/mdwatt/estate-executor-status-tracker/" class="btn">
+            <i class="fa-solid fa-arrow-left"></i>
+            Back to Home
+        </a>
+    </div>
+</body>
+</html>
