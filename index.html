@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Estate Executor Status Tracker — mdwatt</title>
+    <meta name="description" content="One centralized dashboard helping families and executors manage estate files with clarity and confidence.">
+    <meta property="og:type"        content="website">
+    <meta property="og:url"         content="https://mdwatt.github.io/estate-executor-status-tracker/">
+    <meta property="og:title"       content="Estate Executor Status Tracker">
+    <meta property="og:description" content="One centralized dashboard for estate executors — replacing scattered, manual processes with clarity and confidence.">
+    <meta property="og:image"       content="https://mdwatt.github.io/estate-executor-status-tracker/og-image.png">
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="Estate Executor Status Tracker">
+    <meta name="twitter:description" content="One centralized dashboard for estate executors.">
+    <meta name="twitter:image"       content="https://mdwatt.github.io/estate-executor-status-tracker/og-image.png">
+    <link rel="icon"             type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon"             type="image/png" sizes="16x16" href="favicon-16.png">
+    <link rel="apple-touch-icon"                              href="apple-touch-icon.png">
+    <link rel="manifest"                                      href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+    /* ─────────────────────────────────────────────────────
+       CSS CUSTOM PROPERTIES
+    ───────────────────────────────────────────────────── */
+    :root {
+        --bg:           #F7F5F0;
+        --surface:      #FFFFFF;
+        --surface-2:    #EEE9E0;
+        --border:       #D9D2C5;
+        --text-primary: #1A1714;
+        --text-body:    #3D3830;
+        --text-muted:   #7A7167;
+        --accent:       #1B4332;
+        --accent-light: #D8F3DC;
+        --accent-mid:   #52796F;
+        --blue:         #2D6A8A;
+        --blue-light:   #DBF0FA;
+        --shadow-sm:    0 2px 8px rgba(0,0,0,0.06);
+        --shadow-md:    0 8px 32px rgba(0,0,0,0.10);
+        --shadow-lg:    0 20px 60px rgba(0,0,0,0.13);
+        --radius:       1rem;
+        --radius-lg:    1.5rem;
+    }
+    [data-theme="dark"] {
+        --bg:           #111210;
+        --surface:      #1C1D1A;
+        --surface-2:    #252620;
+        --border:       #2E3029;
+        --text-primary: #F0EDE7;
+        --text-body:    #C8C3B8;
+        --text-muted:   #7A7568;
+        --accent:       #52B788;
+        --accent-light: #1A3326;
+        --accent-mid:   #74C69D;
+        --blue:         #63B3D4;
+        --blue-light:   #162534;
+        --shadow-sm:    0 2px 8px rgba(0,0,0,0.3);
+        --shadow-md:    0 8px 32px rgba(0,0,0,0.4);
+        --shadow-lg:    0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    /* ─────────────────────────────────────────────────────
+       RESET & BASE  (mobile-first)
+    ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
+    body {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 16px;
+        background: var(--bg);
+        color: var(--text-primary);
+        line-height: 1.6;
+        -webkit-text-size-adjust: 100%;
+        overflow-x: hidden;
+        min-height: 100vh;
+        transition: background 0.35s ease, color 0.35s ease;
+    }
+    img, svg { max-width: 100%; display: block; }
+    body::before {
+        content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+        background:
+            radial-gradient(circle at 15% 20%, rgba(82,121,111,0.07) 0%, transparent 50%),
+            radial-gradient(circle at 85% 75%, rgba(45,106,138,0.06) 0%, transparent 50%);
+    }
+
+    /* ─────────────────────────────────────────────────────
+       WRAPPER
+    ───────────────────────────────────────────────────── */
+    .wrapper {
+        position: relative; z-index: 1;
+        width: 100%; max-width: 900px;
+        margin: 0 auto;
+        padding: clamp(1rem, 4vw, 3rem) clamp(1rem, 5vw, 2.5rem);
+    }
+
+    /* ─────────────────────────────────────────────────────
+       STATUS BAR
+    ───────────────────────────────────────────────────── */
+    .status-bar {
+        display: flex; align-items: center;
+        justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;
+        margin-bottom: 1.5rem; padding: 0.5rem 1rem;
+        background: var(--accent-light);
+        border: 1px solid rgba(82,121,111,0.2);
+        border-radius: 100px;
+        font-size: 0.72rem; font-weight: 500; color: var(--accent-mid);
+        animation: fadeDown 0.5s ease both;
+    }
+    @media (max-width: 360px) { .status-right { display: none; } }
+    .pulse { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .pulse-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #22c55e; flex-shrink: 0;
+        animation: pulse-ring 2s ease infinite;
+    }
+    @keyframes pulse-ring {
+        0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+        50%      { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────────────────── */
+    header {
+        display: flex; align-items: flex-start;
+        justify-content: space-between; gap: 0.75rem;
+        margin-bottom: clamp(1.5rem, 5vw, 3.5rem);
+        animation: fadeDown 0.6s ease both;
+    }
+    .header-text { flex: 1; min-width: 0; }
+    .header-text h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.4rem, 5.5vw, 2.8rem);
+        font-weight: 700; line-height: 1.15;
+        letter-spacing: -0.02em; color: var(--text-primary);
+        word-break: break-word;
+    }
+    .tagline {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        margin-top: 0.45rem;
+        font-size: clamp(0.62rem, 2vw, 0.75rem);
+        font-weight: 500; letter-spacing: 0.07em;
+        text-transform: uppercase; color: var(--text-muted);
+        flex-wrap: wrap;
+    }
+    .tagline .dot {
+        width: 5px; height: 5px; border-radius: 50%;
+        background: var(--accent-mid); flex-shrink: 0;
+    }
+
+    /* theme toggle */
+    #theme-toggle {
+        flex-shrink: 0;
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.45rem 0.9rem; border-radius: 100px;
+        border: 1.5px solid var(--border); background: var(--surface);
+        color: var(--text-body); font-family: 'DM Sans', sans-serif;
+        font-size: 0.78rem; font-weight: 600; cursor: pointer;
+        box-shadow: var(--shadow-sm); transition: all 0.25s ease;
+        white-space: nowrap;
+    }
+    #theme-toggle:hover {
+        background: var(--surface-2); border-color: var(--accent-mid);
+        color: var(--text-primary); box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+    #theme-toggle i { font-size: 0.92rem; transition: color 0.25s; }
+    [data-theme="light"] #theme-toggle i { color: #D97706; }
+    [data-theme="dark"]  #theme-toggle i { color: #818CF8; }
+    @media (max-width: 380px) {
+        .toggle-label { display: none; }
+        #theme-toggle { padding: 0.45rem 0.65rem; }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       HERO
+    ───────────────────────────────────────────────────── */
+    .hero {
+        background: var(--accent); border-radius: var(--radius-lg);
+        padding: clamp(1.75rem, 6vw, 4rem) clamp(1.25rem, 5vw, 3.5rem);
+        text-align: center; margin-bottom: clamp(1.75rem, 5vw, 3.5rem);
+        position: relative; overflow: hidden; box-shadow: var(--shadow-lg);
+        animation: fadeUp 0.7s 0.1s ease both;
+    }
+    .hero::before {
+        content: ''; position: absolute; top: -50px; right: -50px;
+        width: 200px; height: 200px; border-radius: 50%;
+        background: rgba(255,255,255,0.05); pointer-events: none;
+    }
+    .hero::after {
+        content: ''; position: absolute; bottom: -70px; left: -30px;
+        width: 260px; height: 260px; border-radius: 50%;
+        background: rgba(255,255,255,0.04); pointer-events: none;
+    }
+    .hero-badge {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+        color: rgba(255,255,255,0.85);
+        font-size: clamp(0.62rem, 2vw, 0.72rem); font-weight: 600;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        padding: 0.28rem 0.8rem; border-radius: 100px;
+        margin-bottom: 1.1rem; position: relative; z-index: 1;
+    }
+    .hero p {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.1rem, 4vw, 1.9rem);
+        font-weight: 500; line-height: 1.5; color: #FFFFFF;
+        max-width: 620px; margin: 0 auto;
+        position: relative; z-index: 1;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       SECTION SHARED
+    ───────────────────────────────────────────────────── */
+    section { animation: fadeUp 0.6s ease both; }
+    section:nth-child(3) { animation-delay: 0.10s; }
+    section:nth-child(4) { animation-delay: 0.18s; }
+    section:nth-child(5) { animation-delay: 0.26s; }
+    section:nth-child(6) { animation-delay: 0.34s; }
+    section:nth-child(7) { animation-delay: 0.42s; }
+    .section-label {
+        display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;
+    }
+    .section-label h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.1rem, 3.5vw, 1.75rem);
+        font-weight: 700; letter-spacing: -0.01em;
+        color: var(--text-primary); white-space: nowrap;
+    }
+    .section-label .line { flex: 1; height: 1px; background: var(--border); }
+
+    /* ─────────────────────────────────────────────────────
+       CURRENT PROJECT
+    ───────────────────────────────────────────────────── */
+    .project-section { margin-bottom: clamp(1.75rem, 5vw, 3.5rem); }
+    .project-intro {
+        font-size: clamp(0.92rem, 2.5vw, 1.05rem);
+        color: var(--text-body); line-height: 1.8; margin-bottom: 1.25rem;
+    }
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    @media (max-width: 440px) { .feature-grid { grid-template-columns: 1fr; } }
+    .feature-card {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: var(--radius); padding: 1rem 1.1rem;
+        display: flex; gap: 0.75rem; align-items: flex-start;
+        box-shadow: var(--shadow-sm);
+        transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+    }
+    .feature-card:hover {
+        box-shadow: var(--shadow-md); transform: translateY(-3px);
+        border-color: var(--accent-mid);
+    }
+    .feature-icon {
+        width: 32px; height: 32px; flex-shrink: 0; border-radius: 7px;
+        background: var(--accent-light); color: var(--accent);
+        display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+    }
+    .feature-text { font-size: clamp(0.8rem, 2vw, 0.9rem); color: var(--text-body); line-height: 1.5; }
+
+    /* stat strip */
+    .stat-strip {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem; margin-top: 1.1rem;
+    }
+    @media (max-width: 360px) { .stat-strip { grid-template-columns: 1fr; } }
+    .stat-card {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: var(--radius); padding: 0.9rem 0.75rem;
+        text-align: center; box-shadow: var(--shadow-sm);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .stat-number {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.3rem, 4vw, 1.9rem);
+        font-weight: 700; color: var(--accent); line-height: 1;
+    }
+    [data-theme="dark"] .stat-number { color: var(--accent-mid); }
+    .stat-label {
+        font-size: 0.65rem; font-weight: 600; letter-spacing: 0.06em;
+        text-transform: uppercase; color: var(--text-muted); margin-top: 0.28rem;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       HOW IT WORKS
+    ───────────────────────────────────────────────────── */
+    .how-section {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: var(--radius-lg); padding: clamp(1.25rem, 4vw, 2.5rem);
+        margin-bottom: clamp(1.75rem, 5vw, 3.5rem); box-shadow: var(--shadow-sm);
+    }
+    .steps {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 0.75rem; align-items: start;
+    }
+    @media (max-width: 560px) {
+        .steps { grid-template-columns: 1fr; gap: 0.4rem; }
+        .step-arrow { justify-content: center; padding-top: 0 !important; }
+        .step-arrow i { transform: rotate(90deg); }
+    }
+    .step {
+        background: var(--surface-2); border: 1.5px solid var(--border);
+        border-radius: var(--radius); padding: clamp(0.85rem, 3vw, 1.4rem);
+        display: flex; flex-direction: column; gap: 0.55rem;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .step:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent-mid); }
+    .step-number {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: var(--accent); color: #fff;
+        font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(27,67,50,0.3);
+    }
+    [data-theme="dark"] .step-number { background: var(--accent-mid); color: #111; box-shadow: 0 4px 12px rgba(82,183,136,0.25); }
+    .step-title { font-family: 'Playfair Display', serif; font-size: clamp(0.88rem, 2.5vw, 1rem); font-weight: 700; color: var(--text-primary); }
+    .step-desc  { font-size: clamp(0.78rem, 2vw, 0.88rem); color: var(--text-body); line-height: 1.6; }
+    .step-arrow { display: flex; align-items: center; justify-content: center; color: var(--accent-mid); font-size: 0.85rem; padding-top: 2rem; }
+
+    /* ─────────────────────────────────────────────────────
+       BACKGROUND
+    ───────────────────────────────────────────────────── */
+    .background-section {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: var(--radius-lg); padding: clamp(1.25rem, 4vw, 2.5rem);
+        margin-bottom: clamp(1.75rem, 5vw, 3.5rem); box-shadow: var(--shadow-sm);
+    }
+    .bg-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+    }
+    @media (max-width: 440px) { .bg-grid { grid-template-columns: 1fr; } }
+    .bg-item {
+        display: flex; align-items: flex-start; gap: 0.7rem;
+        padding: 0.75rem 0.9rem; border-radius: 0.7rem;
+        background: var(--surface-2); font-size: clamp(0.8rem, 2vw, 0.9rem);
+        color: var(--text-body); line-height: 1.45; transition: background 0.2s;
+    }
+    .bg-item:hover { background: var(--accent-light); }
+    .bg-dot { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: var(--accent); margin-top: 0.44em; }
+    [data-theme="dark"] .bg-dot { background: var(--accent-mid); }
+
+    /* ─────────────────────────────────────────────────────
+       CONTACT
+    ───────────────────────────────────────────────────── */
+    .contact-section { border-top: 1.5px solid var(--border); padding-top: clamp(1.5rem, 4vw, 2.5rem); text-align: center; }
+    .contact-section h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.1rem, 3.5vw, 1.5rem); font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem; }
+    .contact-subtext { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.1rem; }
+    .contact-btn {
+        display: inline-flex; align-items: center; gap: 0.6rem;
+        background: var(--blue-light); border: 1.5px solid rgba(45,106,138,0.2);
+        border-radius: 100px; padding: 0.8rem clamp(1rem, 4vw, 2rem);
+        font-size: clamp(0.82rem, 2.5vw, 1.05rem); font-weight: 600;
+        color: var(--blue); cursor: pointer; transition: all 0.25s ease;
+        font-family: 'DM Sans', sans-serif; text-decoration: none;
+        max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .contact-btn:hover { background: var(--blue); color: #FFFFFF; box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .contact-btn:hover .contact-arrow { transform: translateX(4px); }
+    .contact-arrow { transition: transform 0.25s; flex-shrink: 0; }
+
+    /* ─────────────────────────────────────────────────────
+       EMAIL MODAL
+    ───────────────────────────────────────────────────── */
+    .modal-overlay {
+        position: fixed; inset: 0; z-index: 200;
+        background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem; opacity: 0; pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: var(--radius-lg); padding: clamp(1.1rem, 4vw, 2rem);
+        width: 100%; max-width: 420px; box-shadow: var(--shadow-lg);
+        transform: translateY(14px) scale(0.97); transition: transform 0.25s ease;
+        max-height: calc(100dvh - 2rem); overflow-y: auto;
+    }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.3rem; gap: 1rem; }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: clamp(1rem, 3vw, 1.15rem); font-weight: 700; color: var(--text-primary); }
+    .modal-close { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: all 0.2s; }
+    .modal-close:hover { background: var(--border); color: var(--text-primary); }
+    .modal-sub { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.1rem; }
+    .email-options { display: flex; flex-direction: column; gap: 0.55rem; }
+    .email-option { display: flex; align-items: center; gap: 0.8rem; padding: 0.75rem 0.95rem; border-radius: 0.75rem; border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text-body); font-size: 0.86rem; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
+    .email-option:hover { border-color: var(--blue); background: var(--blue-light); color: var(--blue); transform: translateX(3px); }
+    .eo-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); }
+    .eo-label { flex: 1; min-width: 0; }
+    .eo-label span { display: block; font-size: 0.68rem; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
+    .modal-divider { border: none; border-top: 1px solid var(--border); margin: 0.8rem 0; }
+    .modal-copy { display: flex; align-items: center; gap: 0.5rem; justify-content: center; width: 100%; padding: 0.6rem 1rem; border-radius: 0.75rem; border: 1.5px dashed var(--border); background: transparent; color: var(--text-muted); font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .modal-copy:hover { border-color: var(--accent-mid); color: var(--accent-mid); }
+    #copy-confirm { font-size: 0.7rem; color: #22c55e; margin-top: 0.4rem; text-align: center; display: none; }
+
+    /* ─────────────────────────────────────────────────────
+       FOOTER
+    ───────────────────────────────────────────────────── */
+    .footer-note { text-align: center; margin-top: 2rem; font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ─────────────────────────────────────────────────────
+       SCROLL TO TOP
+    ───────────────────────────────────────────────────── */
+    #back-top {
+        position: fixed; bottom: 1.1rem; right: 1.1rem; z-index: 99;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;
+        padding: 0.55rem 0.8rem;
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: 0.85rem; color: var(--text-muted);
+        font-family: 'DM Sans', sans-serif; cursor: pointer; box-shadow: var(--shadow-md);
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.3s, transform 0.25s, background 0.2s, color 0.2s;
+    }
+    #back-top.visible { opacity: 1; pointer-events: auto; }
+    #back-top:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    #back-top .btt-arrow { font-size: 1.05rem; line-height: 1; }
+    #back-top .btt-label { font-size: 0.54rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1; }
+
+    /* ─────────────────────────────────────────────────────
+       ANIMATIONS
+    ───────────────────────────────────────────────────── */
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeUp   { from { opacity: 0; transform: translateY(18px);  } to { opacity: 1; transform: translateY(0); } }
+
+    /* ─────────────────────────────────────────────────────
+       PRINT
+    ───────────────────────────────────────────────────── */
+    @media print {
+        body::before, #back-top, #theme-toggle, .status-bar { display: none; }
+        .hero { background: #1B4332 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    /* ─────────────────────────────────────────────────────
+       WIREFRAME PREVIEW MODAL
+    ───────────────────────────────────────────────────── */
+    .wf-trigger-wrap {
+        text-align: center;
+        margin-top: 1.25rem;
+        margin-bottom: 0;
+    }
+    .wf-trigger-btn {
+        display: inline-flex; align-items: center; gap: 0.55rem;
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: 100px; padding: 0.7rem clamp(1rem, 4vw, 1.8rem);
+        font-size: clamp(0.8rem, 2.5vw, 0.95rem); font-weight: 600;
+        color: var(--accent); cursor: pointer; font-family: 'DM Sans', sans-serif;
+        box-shadow: var(--shadow-sm); transition: all 0.25s ease;
+    }
+    .wf-trigger-btn:hover {
+        background: var(--accent); color: #fff; border-color: var(--accent);
+        box-shadow: var(--shadow-md); transform: translateY(-2px);
+    }
+    .wf-trigger-btn i { font-size: 0.85rem; }
+
+    .wf-overlay {
+        position: fixed; inset: 0; z-index: 250;
+        background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem; opacity: 0; pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    .wf-overlay.open { opacity: 1; pointer-events: auto; }
+    .wf-modal {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: var(--radius-lg); width: 100%; max-width: 780px;
+        box-shadow: var(--shadow-lg);
+        transform: translateY(16px) scale(0.97); transition: transform 0.3s ease;
+        max-height: calc(100dvh - 2rem); display: flex; flex-direction: column;
+        overflow: hidden;
+    }
+    .wf-overlay.open .wf-modal { transform: translateY(0) scale(1); }
+    .wf-modal-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: clamp(0.8rem, 3vw, 1.2rem) clamp(1rem, 4vw, 1.5rem);
+        border-bottom: 1.5px solid var(--border); flex-shrink: 0;
+    }
+    .wf-modal-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(0.95rem, 3vw, 1.15rem); font-weight: 700;
+        color: var(--text-primary);
+    }
+    .wf-modal-close {
+        width: 30px; height: 30px; border-radius: 50%;
+        border: 1px solid var(--border); background: var(--surface-2);
+        color: var(--text-muted); cursor: pointer; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.85rem; transition: all 0.2s;
+    }
+    .wf-modal-close:hover { background: var(--border); color: var(--text-primary); }
+
+    .wf-tabs {
+        display: flex; gap: 0; border-bottom: 1.5px solid var(--border);
+        padding: 0 clamp(0.5rem, 3vw, 1.5rem); flex-shrink: 0;
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .wf-tab {
+        padding: 0.65rem 0.9rem; border: none; background: none;
+        font-family: 'DM Sans', sans-serif; font-size: clamp(0.7rem, 2vw, 0.82rem);
+        font-weight: 600; color: var(--text-muted); cursor: pointer;
+        border-bottom: 2.5px solid transparent; transition: all 0.2s;
+        white-space: nowrap; flex-shrink: 0;
+    }
+    .wf-tab:hover { color: var(--text-primary); }
+    .wf-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    [data-theme="dark"] .wf-tab.active { color: var(--accent-mid); border-bottom-color: var(--accent-mid); }
+
+    .wf-body {
+        flex: 1; overflow-y: auto; padding: clamp(1rem, 3vw, 1.5rem);
+        -webkit-overflow-scrolling: touch;
+    }
+    .wf-panel { display: none; }
+    .wf-panel.active { display: block; }
+
+    /* Wireframe rendering inside modal */
+    .wf-screen { border: 2px solid var(--border); border-radius: 0.6rem; overflow: hidden; background: var(--surface); }
+    .wf-screen-header {
+        background: #1B4332; padding: 16px 20px; color: #fff;
+    }
+    [data-theme="dark"] .wf-screen-header { background: #0d2818; }
+    .wf-screen-header h4 { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .wf-screen-header p { font-size: 0.78rem; opacity: 0.85; margin-top: 2px; }
+    .wf-screen-body { padding: 16px 20px; }
+    .wf-instruction {
+        background: var(--surface-2); padding: 10px 14px; margin-bottom: 14px;
+        border-left: 3px solid var(--accent); font-size: 0.8rem;
+        color: var(--text-body); border-radius: 0 0.4rem 0.4rem 0; line-height: 1.5;
+    }
+    .wf-instruction.wf-warn {
+        background: #fffbeb; border-left-color: #f59e0b;
+    }
+    [data-theme="dark"] .wf-instruction.wf-warn { background: #332b00; }
+    .wf-instruction.wf-compliance {
+        background: #f0fdf4; border-left-color: #16a34a;
+    }
+    [data-theme="dark"] .wf-instruction.wf-compliance { background: #0a2914; }
+    .wf-checklist-row {
+        display: flex; align-items: center; padding: 10px 12px;
+        border: 1px solid var(--border); margin-bottom: 6px;
+        background: var(--surface); border-radius: 0.4rem;
+        gap: 0.5rem; flex-wrap: wrap;
+    }
+    .wf-step-name { flex: 1; font-size: 0.82rem; color: var(--text-body); min-width: 150px; }
+    .wf-step-note { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+    .wf-step-note.wf-fmv { color: #92400e; font-weight: 600; }
+    .wf-badge {
+        padding: 3px 10px; border-radius: 4px; font-size: 0.68rem;
+        font-weight: 700; white-space: nowrap; flex-shrink: 0;
+    }
+    .wf-badge-ns { background: #e8e8e8; color: #666; }
+    .wf-badge-sub { background: #fef3c7; color: #92400e; }
+    .wf-badge-rev { background: #d1fae5; color: #065f46; }
+    .wf-badge-rej { background: #fee2e2; color: #991b1b; }
+    [data-theme="dark"] .wf-badge-ns { background: #333; color: #aaa; }
+    [data-theme="dark"] .wf-badge-sub { background: #4a3500; color: #fbbf24; }
+    [data-theme="dark"] .wf-badge-rev { background: #0a3320; color: #6ee7b7; }
+    [data-theme="dark"] .wf-badge-rej { background: #3b1010; color: #fca5a5; }
+    .wf-btn-sm {
+        padding: 4px 12px; border: 1px solid var(--border); border-radius: 4px;
+        font-size: 0.7rem; font-weight: 600; cursor: default;
+        background: var(--surface-2); color: var(--text-body); white-space: nowrap; flex-shrink: 0;
+    }
+    .wf-btn-primary { background: #2c5282; color: #fff; border-color: #2c5282; }
+    .wf-btn-green { background: #16a34a; color: #fff; border-color: #16a34a; }
+    .wf-btn-amber { background: #d97706; color: #fff; border-color: #d97706; }
+    .wf-btn-red { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .wf-btn-disabled { opacity: 0.5; }
+
+    /* Upload box */
+    .wf-upload-box {
+        border: 2px dashed var(--border); padding: 28px; text-align: center;
+        background: var(--surface-2); margin: 14px 0; border-radius: 0.6rem;
+    }
+    .wf-upload-box p { font-size: 0.82rem; color: var(--text-muted); margin-top: 4px; }
+    .wf-upload-icon { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 4px; }
+
+    /* Summary box */
+    .wf-summary {
+        display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 16px;
+        background: var(--surface-2); border: 1px solid var(--border);
+        border-radius: 0.5rem; margin-bottom: 14px;
+    }
+    .wf-summary-item { font-size: 0.78rem; color: var(--text-body); }
+    .wf-summary-item strong { display: block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+
+    /* Attorney table */
+    .wf-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.75rem; }
+    .wf-table th { background: var(--surface-2); padding: 8px 10px; text-align: left; font-size: 0.7rem; font-weight: 700; border: 1px solid var(--border); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+    .wf-table td { padding: 8px 10px; border: 1px solid var(--border); color: var(--text-body); vertical-align: middle; }
+    .wf-table tr:hover { background: var(--surface-2); }
+
+    /* Deadline box */
+    .wf-deadline {
+        background: #fffbeb; border: 1px solid #f59e0b; padding: 10px 14px;
+        border-radius: 0.4rem; font-size: 0.78rem; margin-bottom: 14px; color: #92400e;
+    }
+    [data-theme="dark"] .wf-deadline { background: #332b00; color: #fbbf24; border-color: #92400e; }
+    .wf-deadline strong { font-weight: 700; }
+
+    /* Button group inside wireframe */
+    .wf-btn-group { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .wf-action-group { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    /* Footer inside wireframe */
+    .wf-screen-footer {
+        padding: 12px 20px; border-top: 1.5px solid var(--border);
+        background: var(--surface-2); text-align: center;
+        font-size: 0.75rem; color: var(--text-muted);
+    }
+
+    /* checkbox row */
+    .wf-toggle-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 0.8rem; color: var(--text-body); }
+    .wf-toggle-row input[type=checkbox] { width: 14px; height: 14px; accent-color: var(--accent); }
+
+    /* Notes area */
+    .wf-notes-area {
+        width: 100%; padding: 8px; border: 1px solid var(--border);
+        border-radius: 0.4rem; font-size: 0.78rem; resize: vertical;
+        background: var(--surface); color: var(--text-body);
+        font-family: 'DM Sans', sans-serif; min-height: 60px;
+    }
+
+    /* Qual date field */
+    .wf-qual-field {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 8px; border: 1px solid var(--border);
+        border-radius: 4px; font-size: 0.78rem; background: var(--surface);
+        color: var(--text-body);
+    }
+
+    @media (max-width: 560px) {
+        .wf-tabs { gap: 0; }
+        .wf-tab { padding: 0.55rem 0.6rem; font-size: 0.68rem; }
+        .wf-table { font-size: 0.68rem; }
+        .wf-table th, .wf-table td { padding: 6px; }
+    }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <div class="status-bar">
+        <span class="pulse"><span class="pulse-dot"></span> Active Development</span>
+        <span class="status-right">Estate Executor Status Tracker &nbsp;&middot;&nbsp; v1.0</span>
+    </div>
+
+    <header>
+        <div class="header-text">
+            <h1>Estate Executor<br>Status Tracker</h1>
+            <span class="tagline">
+                <span class="dot"></span>
+                mdwatt / estate-executor-status-tracker
+            </span>
+        </div>
+        <button id="theme-toggle" aria-label="Toggle display mode">
+            <i class="fa-solid fa-sun" id="theme-icon"></i>
+            <span class="toggle-label" id="toggle-label">Light Mode</span>
+        </button>
+    </header>
+
+    <section class="hero" style="animation-delay:0.05s">
+        <div class="hero-badge"><i class="fa-solid fa-circle-nodes" style="font-size:0.62rem"></i> Active Project</div>
+        <p>I build tools for the workflows probate Attorneys have given up trying to fix.</p>
+    </section>
+
+    <section class="project-section">
+        <div class="section-label"><h2>Current Project</h2><div class="line"></div></div>
+        <p class="project-intro">Estate Executor Status Tracker eliminates the follow-up burden for probate Attorneys — giving executors one frictionless link to upload every required document, so Attorneys get a complete, documented file without the phone calls.</p>
+        <div class="feature-grid">
+            <div class="feature-card"><div class="feature-icon"><i class="fa-solid fa-layer-group"></i></div><span class="feature-text">Solves scattered information across multiple sources</span></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fa-solid fa-gauge-high"></i></div><span class="feature-text">One centralized dashboard view for every estate file</span></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fa-solid fa-cubes"></i></div><span class="feature-text">Built with clean architecture for long-term reliability</span></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fa-solid fa-compass-drafting"></i></div><span class="feature-text">Designed and architected end-to-end by the technical lead</span></div>
+        </div>
+        <div class="stat-strip">
+            <div class="stat-card"><div class="stat-number" id="visitor-count">&#8212;</div><div class="stat-label">Page Visits</div></div>
+            <div class="stat-card"><div class="stat-number">25+</div><div class="stat-label">Yrs Experience</div></div>
+            <div class="stat-card"><div class="stat-number">&#8734;</div><div class="stat-label">States Targeted: 50</div></div>
+        </div>
+    </section>
+
+    <section class="how-section">
+        <div class="section-label"><h2>How It Works</h2><div class="line"></div></div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-title">Upload the Estate File</div>
+                <div class="step-desc">"Attorney Creates the Case" — In under two minutes, then after Attorney creates the case, the Executor receives a secure magic link by email. No portal setup. No account creation.</div>
+            </div>
+            <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-title">Organize &amp; Track Status</div>
+                <div class="step-desc">"Executor Uploads on Their Own" — The Executor follows the link, uploads each required document against the checklist, and the Attorney sees status update in real time. No follow-up calls needed.</div>
+            </div>
+            <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">Attorney Reviews and Closes</div>
+                <div class="step-desc">"Attorney" — Once all items are submitted, the Attorney reviews, marks each step complete, and closes the case with a full documented record.</div>
+            </div>
+        </div>
+		<div class="wf-trigger-wrap">
+        <button class="wf-trigger-btn" id="open-wf-modal" aria-haspopup="dialog">
+            <i class="fa-solid fa-desktop"></i>
+            View Product Wireframes
+            <i class="fa-solid fa-arrow-right" style="font-size:0.7rem;opacity:0.6"></i>
+        </button>
+    </div>
+    </section>
+
+    <section class="background-section">
+        <div class="section-label"><h2>Background</h2><div class="line"></div></div>
+        <div class="bg-grid">
+            <div class="bg-item"><div class="bg-dot"></div><span>Technology architecture for enterprise systems</span></div>
+            <div class="bg-item"><div class="bg-dot"></div><span>Workflow design and automation</span></div>
+            <div class="bg-item"><div class="bg-dot"></div><span>API and integration development</span></div>
+            <div class="bg-item"><div class="bg-dot"></div><span>Productivity applications that solve real-world problems</span></div>
+            <div class="bg-item"><div class="bg-dot"></div><span>Family document management platforms</span></div>
+            <div class="bg-item"><div class="bg-dot"></div><span>Secure data handling across distributed sources</span></div>
+        </div>
+    </section>
+
+    <section class="contact-section">
+        <h2>Get in Touch</h2>
+        <p class="contact-subtext">Click below to email us directly.</p>
+        <button id="open-email-modal" class="contact-btn" aria-haspopup="dialog">
+            <i class="fa-solid fa-envelope"></i>
+            mark@markdwatt.com
+            <i class="fa-solid fa-arrow-right contact-arrow"></i>
+        </button>
+    </section>
+
+    <p class="footer-note">&copy; 2025 Mark D. Watt &nbsp;&middot;&nbsp; Estate Executor Status Tracker</p>
+
+</div>
+
+<div class="wf-overlay" id="wf-modal" role="dialog" aria-modal="true" aria-labelledby="wf-heading">
+    <div class="wf-modal">
+        <div class="wf-modal-head">
+            <div class="wf-modal-title" id="wf-heading">Product Wireframes</div>
+            <button class="wf-modal-close" id="close-wf-modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="wf-tabs" role="tablist">
+            <button class="wf-tab active" data-wf-tab="wf-s1" role="tab" aria-selected="true">Screen 1 — Executor Landing</button>
+            <button class="wf-tab" data-wf-tab="wf-s2" role="tab" aria-selected="false">Screen 2 — Upload Document</button>
+            <button class="wf-tab" data-wf-tab="wf-s3" role="tab" aria-selected="false">Screen 3 — Attorney View</button>
+        </div>
+        <div class="wf-body">
+
+            <!-- ══════ SCREEN 1 — Executor Landing ══════ -->
+            <div class="wf-panel active" id="wf-s1" role="tabpanel">
+                <div class="wf-screen">
+                    <div class="wf-screen-header">
+                        <h4>Executor Status Tracker</h4>
+                        <p><strong>Decedent:</strong> John Smith</p>
+                        <p><strong>Case ID:</strong> EST-2026-001</p>
+                        <p><strong>Executor:</strong> Sarah Smith</p>
+                    </div>
+                    <div class="wf-screen-body">
+                        <div class="wf-instruction">
+                            Tap a step to upload the required document. Steps marked <strong>Not Started</strong> still require a document upload.
+                        </div>
+                        <div class="wf-instruction wf-warn">
+                            <strong>&#9888;&#65039; Your secure link expires in 4 day(s).</strong> Please contact your attorney at attorney@lawfirm.com to have it refreshed.
+                        </div>
+
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">
+                                1. Certified Death Certificate(s) Obtained
+                                <div class="wf-step-note">Note: If you have multiple versions (short-form and long-form), combine into a single PDF before uploading.</div>
+                            </div>
+                            <span class="wf-badge wf-badge-sub">Submitted</span>
+                            <span class="wf-btn-sm">View</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">2. Original Will Located</div>
+                            <span class="wf-badge wf-badge-rev">Reviewed</span>
+                            <span class="wf-btn-sm">View</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">3. Probate Case Filed with Court</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">4. Letters Testamentary Issued</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">5. Estate Bank Account Opened</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">6. All Bank &amp; Financial Accounts Identified</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">7. Real Property Secured and Identified</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">8. Insurance Policies Located</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">9. Creditors Notified</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">10. Outstanding Debts Identified</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">
+                                11. Inventory of Assets Completed
+                                <div class="wf-step-note wf-fmv">&#9888; All values must be Fair Market Value (FMV) as of the Date of Death &mdash; not current account balances.</div>
+                            </div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                        <div class="wf-checklist-row">
+                            <div class="wf-step-name">12. Final Accounting Prepared</div>
+                            <span class="wf-badge wf-badge-ns">Not Started</span>
+                            <span class="wf-btn-sm wf-btn-primary">Upload</span>
+                        </div>
+                    </div>
+                    <div class="wf-screen-footer">
+                        Need help? support@stateexecutortracker.com
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════ SCREEN 2 — Upload Document ══════ -->
+            <div class="wf-panel" id="wf-s2" role="tabpanel">
+                <div class="wf-screen">
+                    <div class="wf-screen-header">
+                        <h4>Upload for Step &mdash; Original Will Located</h4>
+                        <p>Step 2 of 12</p>
+                    </div>
+                    <div class="wf-screen-body">
+                        <div class="wf-instruction">
+                            Upload a photo or PDF (.pdf, .jpg, .png) &mdash; Max file size: 25MB
+                        </div>
+                        <div class="wf-instruction wf-compliance">
+                            <strong>Electronic / Digital Will?</strong>
+                            <div class="wf-toggle-row" style="margin-top:6px;">
+                                <input type="checkbox" id="wf-ewill" disabled>
+                                <label for="wf-ewill">This will was created or stored electronically (digital/electronic original)</label>
+                            </div>
+                            <div style="font-size:0.72rem; color:#166534; margin-top:5px;">
+                                If checked, the system will automatically record the upload timestamp, source IP address, and SHA-256 file checksum as chain-of-custody metadata. This is evidentiary best practice for electronically originated wills.
+                            </div>
+                        </div>
+                        <div class="wf-upload-box">
+                            <div class="wf-upload-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+                            <p style="font-size:0.92rem; font-weight:600; color:var(--text-primary)">Choose File</p>
+                            <p>Drag and drop or click to select</p>
+                            <p style="font-size:0.72rem; margin-top:6px;">Accepted: .pdf, .jpg, .png &mdash; Max 25MB</p>
+                        </div>
+                        <div class="wf-btn-group">
+                            <span class="wf-btn-sm">Cancel</span>
+                            <span class="wf-btn-sm wf-btn-primary">Submit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <div style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">&#8627; Screen 2 Variant &mdash; Step 11: Inventory of Assets (AOC-E-505)</div>
+                    <div class="wf-screen">
+                        <div class="wf-screen-header">
+                            <h4>Upload for Step &mdash; Inventory of Assets Completed</h4>
+                            <p>Step 11 of 12</p>
+                        </div>
+                        <div class="wf-screen-body">
+                            <div class="wf-instruction wf-warn">
+                                <strong>&#9888; Important &mdash; AOC-E-505 Valuation Requirement:</strong><br>
+                                All asset values on this form must reflect <strong>Fair Market Value (FMV) as of the Date of Death</strong> &mdash; not current account balances or today's market values. Using incorrect valuation dates is a primary cause of inventory rejection by the Clerk of Court.
+                            </div>
+                            <div class="wf-upload-box">
+                                <div class="wf-upload-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+                                <p style="font-size:0.92rem; font-weight:600; color:var(--text-primary)">Choose File</p>
+                                <p>Drag and drop or click to select</p>
+                                <p style="font-size:0.72rem; margin-top:6px;">Accepted: .pdf, .jpg, .png &mdash; Max 25MB</p>
+                            </div>
+                            <div class="wf-btn-group">
+                                <span class="wf-btn-sm">Cancel</span>
+                                <span class="wf-btn-sm wf-btn-primary">Submit</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════ SCREEN 3 — Attorney View ══════ -->
+            <div class="wf-panel" id="wf-s3" role="tabpanel">
+                <div class="wf-screen">
+                    <div class="wf-screen-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h4>Case Details</h4>
+                            <p><strong>Decedent:</strong> John Smith</p>
+                            <p><strong>Executor:</strong> Sarah Smith &lt;executor@example.com&gt;</p>
+                            <p><strong>Attorney:</strong> attorney@lawfirm.com</p>
+                            <p><strong>State:</strong> NC</p>
+                            <p><strong>Status:</strong> Open &nbsp;|&nbsp; <strong>Created:</strong> Dec 15, 2025</p>
+                            <div style="margin-top:8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <strong style="font-size:0.78rem;">Date of Qualification:</strong>
+                                <span class="wf-qual-field">01/03/2026 &#128197;</span>
+                                <span class="wf-btn-sm wf-btn-primary" style="font-size:0.65rem;">Save</span>
+                            </div>
+                            <div style="font-size:0.65rem; opacity:0.7; margin-top:3px;">Letters Testamentary issued by Clerk &mdash; add when received. Triggers Step 11 deadline.</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="wf-btn-sm" style="background:#6b7280; color:#fff; border-color:#6b7280;">&#9993; Resend Magic Link</span>
+                            <div style="font-size:0.62rem; opacity:0.7; margin-top:3px;">Use if executor's 30-day<br>link has expired</div>
+                        </div>
+                    </div>
+                    <div class="wf-screen-body">
+                        <div class="wf-instruction wf-compliance" style="margin-bottom:12px;">
+                            <strong>&#128231; Attorney Notifications Active:</strong> You will receive an email at attorney@lawfirm.com each time the executor uploads a document. Each email includes a direct link back to this case.
+                        </div>
+                        <div class="wf-summary">
+                            <div class="wf-summary-item"><strong>Not Started</strong> <span style="font-size:1.15rem; font-weight:700;">7</span></div>
+                            <div class="wf-summary-item"><strong>Submitted</strong> <span style="font-size:1.15rem; font-weight:700;">3</span></div>
+                            <div class="wf-summary-item"><strong>Reviewed</strong> <span style="font-size:1.15rem; font-weight:700;">2</span></div>
+                            <div class="wf-summary-item" style="margin-left:auto; text-align:right;">
+                                <strong>Step 11 Soft Deadline</strong>
+                                <span style="font-size:0.85rem; color:#92400e; font-weight:700;">Mar 24, 2026</span>
+                                <span style="font-size:0.65rem; color:var(--text-muted); display:block;">Qual. date + 80 days</span>
+                            </div>
+                        </div>
+                        <div class="wf-deadline">
+                            <strong>&#9200; Inventory Deadline Approaching:</strong> Step 11 (AOC-E-505) soft deadline is Mar 24, 2026 (80 days from qualification). Court hard deadline is Apr 3, 2026 (90 days). Step 11 is currently Not Started.
+                        </div>
+
+                        <table class="wf-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:32%;">Step</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                    <th>Document</th>
+                                    <th style="width:28%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1. Certified Death Certificate(s) Obtained</td>
+                                    <td><span class="wf-badge wf-badge-sub">Submitted</span></td>
+                                    <td>Jan 14, 2026</td>
+                                    <td><a href="#" style="font-size:0.72rem; color:var(--blue);">View PDF</a> &nbsp;<span class="wf-btn-sm wf-btn-red" style="font-size:0.6rem; padding:2px 6px;">Delete</span></td>
+                                    <td>
+                                        <div class="wf-action-group">
+                                            <span class="wf-btn-sm wf-btn-green" style="font-size:0.62rem;">Mark Reviewed</span>
+                                            <span class="wf-btn-sm wf-btn-amber" style="font-size:0.62rem;">Reject</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2. Original Will Located</td>
+                                    <td><span class="wf-badge wf-badge-rev">Reviewed</span></td>
+                                    <td>Jan 12, 2026</td>
+                                    <td><a href="#" style="font-size:0.72rem; color:var(--blue);">View PDF</a> &nbsp;<span class="wf-btn-sm wf-btn-red" style="font-size:0.6rem; padding:2px 6px;">Delete</span></td>
+                                    <td><span class="wf-btn-sm wf-btn-disabled" style="font-size:0.62rem;">Reviewed &#10003;</span></td>
+                                </tr>
+                                <tr style="background:#fff5f5;">
+                                    <td>3. Probate Case Filed with Court</td>
+                                    <td><span class="wf-badge wf-badge-rej">Rejected</span></td>
+                                    <td>Jan 18, 2026</td>
+                                    <td><span style="font-size:0.72rem; color:#999; text-decoration:line-through;">View PDF</span></td>
+                                    <td><span style="font-size:0.68rem; color:#991b1b;">Executor notified to re-upload</span></td>
+                                </tr>
+                                <tr>
+                                    <td>4. Letters Testamentary Issued</td>
+                                    <td><span class="wf-badge wf-badge-ns">Not Started</span></td>
+                                    <td>&mdash;</td>
+                                    <td>&mdash;</td>
+                                    <td>&mdash;</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" style="text-align:center; color:var(--text-muted); font-style:italic; font-size:0.72rem;">Steps 5&ndash;10 follow same pattern as Step 4 (Not Started / no document)</td>
+                                </tr>
+                                <tr style="background:#fffbeb;">
+                                    <td>
+                                        11. Inventory of Assets Completed
+                                        <div style="font-size:0.65rem; color:#92400e; margin-top:2px;">AOC-E-505 &mdash; FMV as of Date of Death required</div>
+                                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:1px;">Soft deadline: Mar 24, 2026</div>
+                                    </td>
+                                    <td><span class="wf-badge wf-badge-ns">Not Started</span></td>
+                                    <td>&mdash;</td>
+                                    <td>&mdash;</td>
+                                    <td>&mdash;</td>
+                                </tr>
+                                <tr>
+                                    <td>12. Final Accounting Prepared</td>
+                                    <td><span class="wf-badge wf-badge-ns">Not Started</span></td>
+                                    <td>&mdash;</td>
+                                    <td>&mdash;</td>
+                                    <td>&mdash;</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top:16px;">
+                            <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:6px; color:var(--text-primary);">Internal Notes (Attorney Only &mdash; Not visible to executor)</label>
+                            <textarea class="wf-notes-area" rows="3" placeholder="Add private notes about this case..." disabled></textarea>
+                            <span class="wf-btn-sm" style="margin-top:6px; display:inline-block;">Save Notes</span>
+                        </div>
+
+                        <hr style="border:none; border-top:1px solid var(--border); margin:18px 0;">
+
+                        <div style="display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+                            <span class="wf-btn-sm">Edit Case Details</span>
+                            <span class="wf-btn-sm wf-btn-primary">Export Case to PDF</span>
+                            <span class="wf-btn-sm wf-btn-red wf-btn-disabled">Close Case (All Items must be Reviewed)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="email-modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-heading">How would you like to reach out?</div>
+            <button class="modal-close" id="close-modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="modal-sub">Choose your email app — subject and message are pre-filled.</p>
+        <div class="email-options">
+            <a class="email-option" id="opt-default" href="#">
+                <div class="eo-icon"><i class="fa-solid fa-envelope" style="color:var(--accent-mid)"></i></div>
+                <div class="eo-label">Default Mail App<span>Outlook, Apple Mail, Thunderbird &amp; others</span></div>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.7rem;color:var(--text-muted)"></i>
+            </a>
+            <a class="email-option" id="opt-gmail" href="#" target="_blank" rel="noopener">
+                <div class="eo-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                </div>
+                <div class="eo-label">Gmail<span>Opens Gmail in your browser</span></div>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.7rem;color:var(--text-muted)"></i>
+            </a>
+            <a class="email-option" id="opt-yahoo" href="#" target="_blank" rel="noopener">
+                <div class="eo-icon" style="color:#6001D2"><i class="fa-brands fa-yahoo"></i></div>
+                <div class="eo-label">Yahoo Mail<span>Opens Yahoo Mail in your browser</span></div>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.7rem;color:var(--text-muted)"></i>
+            </a>
+            <a class="email-option" id="opt-outlook" href="#" target="_blank" rel="noopener">
+                <div class="eo-icon" style="color:#0078D4"><i class="fa-brands fa-microsoft"></i></div>
+                <div class="eo-label">Outlook Web (Office 365)<span>Opens Outlook in your browser</span></div>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.7rem;color:var(--text-muted)"></i>
+            </a>
+        </div>
+        <hr class="modal-divider">
+        <button class="modal-copy" id="copy-email"><i class="fa-regular fa-copy"></i> Copy email address to clipboard</button>
+        <div id="copy-confirm"><i class="fa-solid fa-circle-check"></i> &nbsp;Copied to clipboard!</div>
+    </div>
+</div>
+
+<button id="back-top" aria-label="Scroll back to top">
+    <i class="fa-solid fa-arrow-up btt-arrow"></i>
+    <span class="btt-label">Top</span>
+</button>
+
+<script>
+/* WIREFRAME MODAL */
+(function() {
+    var wfOverlay = document.getElementById('wf-modal');
+    var wfOpenBtn = document.getElementById('open-wf-modal');
+    var wfCloseBtn = document.getElementById('close-wf-modal');
+    function openWfModal()  { wfOverlay.classList.add('open');    document.body.style.overflow = 'hidden'; }
+    function closeWfModal() { wfOverlay.classList.remove('open'); document.body.style.overflow = ''; }
+    wfOpenBtn.addEventListener('click', openWfModal);
+    wfCloseBtn.addEventListener('click', closeWfModal);
+    wfOverlay.addEventListener('click', function(e) { if (e.target === wfOverlay) closeWfModal(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && wfOverlay.classList.contains('open')) closeWfModal(); });
+    /* Tab switching */
+    var wfTabs = document.querySelectorAll('.wf-tab');
+    var wfPanels = document.querySelectorAll('.wf-panel');
+    wfTabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var target = tab.getAttribute('data-wf-tab');
+            wfTabs.forEach(function(t) { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+            wfPanels.forEach(function(p) { p.classList.remove('active'); });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+            document.getElementById(target).classList.add('active');
+            /* Scroll panel body to top on tab switch */
+            var wfBody = document.querySelector('.wf-body');
+            if (wfBody) wfBody.scrollTop = 0;
+        });
+    });
+})();
+
+/* THEME */
+var html = document.documentElement;
+var themeToggle = document.getElementById('theme-toggle');
+var themeIcon   = document.getElementById('theme-icon');
+var themeLabel  = document.getElementById('toggle-label');
+function applyTheme(t) {
+    html.setAttribute('data-theme', t);
+    if (t === 'dark') { themeIcon.className = 'fa-solid fa-moon'; themeLabel.textContent = 'Dark Mode'; }
+    else              { themeIcon.className = 'fa-solid fa-sun';  themeLabel.textContent = 'Light Mode'; }
+    localStorage.setItem('est-theme', t);
+}
+applyTheme(localStorage.getItem('est-theme') || 'light');
+themeToggle.addEventListener('click', function() {
+    applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+/* EMAIL MODAL */
+var TO = 'mark@markdwatt.com';
+var SUBJECT = 'Estate Executor Status Tracker \u2014 Inquiry';
+var BODY    = 'Hi Mark,\n\nI came across the Estate Executor Status Tracker and would like to learn more.\n\nName:\nOrganization:\nMessage:\n';
+var eS = encodeURIComponent(SUBJECT), eB = encodeURIComponent(BODY), eT = encodeURIComponent(TO);
+document.getElementById('opt-default').href  = 'mailto:' + TO + '?subject=' + eS + '&body=' + eB;
+document.getElementById('opt-gmail').href    = 'https://mail.google.com/mail/?view=cm&to=' + eT + '&su=' + eS + '&body=' + eB;
+document.getElementById('opt-yahoo').href    = 'https://compose.mail.yahoo.com/?to=' + eT + '&subject=' + eS + '&body=' + eB;
+document.getElementById('opt-outlook').href  = 'https://outlook.office.com/mail/deeplink/compose?to=' + eT + '&subject=' + eS + '&body=' + eB;
+
+var overlay  = document.getElementById('email-modal');
+var openBtn  = document.getElementById('open-email-modal');
+var closeBtn = document.getElementById('close-modal');
+function openModal()  { overlay.classList.add('open');    document.body.style.overflow = 'hidden'; }
+function closeModal() { overlay.classList.remove('open'); document.body.style.overflow = ''; }
+openBtn.addEventListener('click', openModal);
+closeBtn.addEventListener('click', closeModal);
+overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+document.querySelectorAll('.email-option').forEach(function(el) {
+    el.addEventListener('click', function() { setTimeout(closeModal, 200); });
+});
+document.getElementById('copy-email').addEventListener('click', function() {
+    navigator.clipboard.writeText(TO).then(function() {
+        var c = document.getElementById('copy-confirm');
+        c.style.display = 'block';
+        setTimeout(function() { c.style.display = 'none'; }, 2500);
+    });
+});
+
+/* VISITOR COUNTER — GoatCounter
+   Waits for count.js to finish loading, then fetches
+   the exact path GoatCounter recorded for this page.   */
+(function() {
+    var el = document.getElementById('visitor-count');
+    var GC_URL = 'https://estateexecutortracker.goatcounter.com';
+
+    function fetchCount(path) {
+        fetch(GC_URL + '/counter/' + encodeURIComponent(path) + '.json')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var total = data.count_unique || data.count || 0;
+                if (!total) { el.textContent = '1'; return; }
+                var current = 0;
+                var step  = Math.max(1, Math.floor(total / 60));
+                var timer = setInterval(function() {
+                    current = Math.min(current + step, total);
+                    el.textContent = current.toLocaleString();
+                    if (current >= total) clearInterval(timer);
+                }, Math.max(16, Math.round(1200 / (total / step))));
+            })
+            .catch(function() { el.textContent = '\u2014'; });
+    }
+
+    /* Poll until count.js exposes get_data(), then use its path.
+       Falls back to location.pathname after 5 seconds.          */
+    var waited = 0;
+    var poll = setInterval(function() {
+        waited += 100;
+        if (window.goatcounter && window.goatcounter.get_data) {
+            clearInterval(poll);
+            fetchCount(window.goatcounter.get_data()['p']);
+        } else if (waited >= 5000) {
+            clearInterval(poll);
+            fetchCount(location.pathname);
+        }
+    }, 100);
+})();
+
+/* SCROLL TO TOP */
+var backTop = document.getElementById('back-top');
+window.addEventListener('scroll', function() {
+    backTop.classList.toggle('visible', window.scrollY > 300);
+});
+backTop.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+<script data-cfasync="false" src="https://gc.zgo.at/count.js" async data-goatcounter="https://estateexecutortracker.goatcounter.com/count"></script>
+</body>
+</html>
